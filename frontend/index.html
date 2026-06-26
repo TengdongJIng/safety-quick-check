@@ -1930,7 +1930,7 @@
                 <div class="image-grid">
                     ${images.map(img => `
                         <div class="image-thumb" onclick="openImageViewer('${img.image_id}', '${img.oss_object_key || ''}')">
-                            <img src="/api/image/${img.image_id}" alt="${img.image_id}" loading="lazy"
+                            <img src="${img.oss_object_key}" alt="${img.image_id}" loading="lazy"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="image-placeholder" style="display:none;">
                                 <span class="ph-icon">&#128247;</span>
