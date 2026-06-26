@@ -580,6 +580,8 @@ def serve_frontend(path):
 # ============================================================
 
 if __name__ == '__main__':
+    # 从环境变量读取端口，支持 Railway 等部署平台
+    port = int(os.environ.get('PORT', 5000))
     print(f"[INFO] 数据库路径: {DB_PATH}")
-    print(f"[INFO] 服务启动: http://127.0.0.1:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print(f"[INFO] 服务启动: http://0.0.0.0:{port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
