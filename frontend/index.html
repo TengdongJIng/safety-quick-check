@@ -1224,13 +1224,18 @@
             justify-content: center;
             overflow: hidden;
             touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .image-viewer-container img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transition: transform 0.1s;
+            transform-origin: center center;
+            -webkit-transform-origin: center center;
+            will-change: transform;
+            pointer-events: none;
         }
 
         .image-viewer-info {
@@ -2218,12 +2223,70 @@
     }
 
     /* ============================================================
-       图片查看器
+       图片查看器（支持缩放/拖动/双指捏合/鼠标滚轮）
        ============================================================ */
+    const viewerState = {
+        scale: 1,
+        minScale: 1,
+        maxScale: 5,
+        translateX: 0,
+        translateY: 0,
+        lastTouchDist: 0,
+        lastTouchX: 0,
+        lastTouchY: 0,
+        isDragging: false,
+        isPinching: false,
+        lastTapTime: 0,
+        lastTapX: 0,
+        lastTapY: 0,
+    };
+
+    function resetViewerTransform() {
+        viewerState.scale = 1;
+        viewerState.translateX = 0;
+        viewerState.translateY = 0;
+        applyViewerTransform();
+    }
+
+    function applyViewerTransform() {
+        const img = document.getElementById('viewerImage');
+        img.style.transform = `translate(${viewerState.translateX}px, ${viewerState.translateY}px) scale(${viewerState.scale})`;
+    }
+
+    function clampScale(s) {
+        return Math.max(viewerState.minScale, Math.min(viewerState.maxScale, s));
+    }
+
+    function zoomAt(clientX, clientY, newScale) {
+        const img = document.getElementById('viewerImage');
+        const container = document.getElementById('viewerContainer');
+        const rect = container.getBoundingClientRect();
+
+        const cx = clientX - rect.left - rect.width / 2;
+        const cy = clientY - rect.top - rect.height / 2;
+
+        const oldScale = viewerState.scale;
+        const s = clampScale(newScale);
+        const ratio = s / oldScale;
+
+        viewerState.translateX = cx - (cx - viewerState.translateX) * ratio;
+        viewerState.translateY = cy - (cy - viewerState.translateY) * ratio;
+        viewerState.scale = s;
+
+        if (viewerState.scale === 1) {
+            viewerState.translateX = 0;
+            viewerState.translateY = 0;
+        }
+
+        applyViewerTransform();
+    }
+
     function openImageViewer(imageId, ossKey) {
         const viewer = document.getElementById('imageViewer');
         const img = document.getElementById('viewerImage');
         const info = document.getElementById('viewerInfo');
+
+        resetViewerTransform();
 
         img.src = ossKey || '';
         img.alt = imageId;
@@ -2237,7 +2300,108 @@
         const viewer = document.getElementById('imageViewer');
         viewer.classList.remove('show');
         document.body.style.overflow = '';
+        resetViewerTransform();
     }
+
+    (function setupViewerEvents() {
+        const container = document.getElementById('viewerContainer');
+
+        container.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            zoomAt(e.clientX, e.clientY, viewerState.scale * delta);
+        }, { passive: false });
+
+        container.addEventListener('dblclick', function(e) {
+            if (viewerState.scale > 1) {
+                resetViewerTransform();
+            } else {
+                zoomAt(e.clientX, e.clientY, 2.5);
+            }
+        });
+
+        container.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 1) {
+                viewerState.isDragging = true;
+                viewerState.lastTouchX = e.touches[0].clientX;
+                viewerState.lastTouchY = e.touches[0].clientY;
+
+                const now = Date.now();
+                const dx = e.touches[0].clientX - viewerState.lastTapX;
+                const dy = e.touches[0].clientY - viewerState.lastTapY;
+                if (now - viewerState.lastTapTime < 300 && Math.sqrt(dx * dx + dy * dy) < 30) {
+                    if (viewerState.scale > 1) {
+                        resetViewerTransform();
+                    } else {
+                        zoomAt(e.touches[0].clientX, e.touches[0].clientY, 2.5);
+                    }
+                    viewerState.lastTapTime = 0;
+                } else {
+                    viewerState.lastTapTime = now;
+                    viewerState.lastTapX = e.touches[0].clientX;
+                    viewerState.lastTapY = e.touches[0].clientY;
+                }
+            } else if (e.touches.length === 2) {
+                viewerState.isDragging = false;
+                viewerState.isPinching = true;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                viewerState.lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+
+            if (e.touches.length === 1 && viewerState.isDragging && viewerState.scale > 1) {
+                const dx = e.touches[0].clientX - viewerState.lastTouchX;
+                const dy = e.touches[0].clientY - viewerState.lastTouchY;
+                viewerState.translateX += dx;
+                viewerState.translateY += dy;
+                viewerState.lastTouchX = e.touches[0].clientX;
+                viewerState.lastTouchY = e.touches[0].clientY;
+                applyViewerTransform();
+            } else if (e.touches.length === 2 && viewerState.isPinching) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+                if (viewerState.lastTouchDist > 0) {
+                    const ratio = dist / viewerState.lastTouchDist;
+                    zoomAt(centerX, centerY, viewerState.scale * ratio);
+                }
+                viewerState.lastTouchDist = dist;
+            }
+        }, { passive: false });
+
+        container.addEventListener('touchend', function(e) {
+            if (e.touches.length < 2) {
+                viewerState.isPinching = false;
+                viewerState.lastTouchDist = 0;
+            }
+            if (e.touches.length === 0) {
+                viewerState.isDragging = false;
+                viewerState.isPinching = false;
+
+                if (viewerState.scale < 1) {
+                    resetViewerTransform();
+                }
+            }
+        }, { passive: false });
+
+        window.addEventListener('resize', function() {
+            const viewer = document.getElementById('imageViewer');
+            if (viewer.classList.contains('show')) {
+                resetViewerTransform();
+            }
+        });
+
+        window.addEventListener('orientationchange', function() {
+            setTimeout(resetViewerTransform, 300);
+        });
+    })();
 
     document.getElementById('imageViewer').addEventListener('click', function(e) {
         if (e.target === this || e.target === document.getElementById('viewerContainer')) {
