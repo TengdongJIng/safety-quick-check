@@ -2225,15 +2225,9 @@
         const img = document.getElementById('viewerImage');
         const info = document.getElementById('viewerInfo');
 
-        if (ossKey) {
-            img.src = ossKey;
-            img.alt = imageId;
-            info.textContent = imageId;
-        } else {
-            img.src = '/api/image/' + imageId;
-            img.alt = imageId;
-            info.textContent = imageId;
-        }
+        img.src = ossKey || '';
+        img.alt = imageId;
+        info.textContent = imageId;
 
         viewer.classList.add('show');
         document.body.style.overflow = 'hidden';
