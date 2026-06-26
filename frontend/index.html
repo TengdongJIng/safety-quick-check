@@ -1733,6 +1733,8 @@
         quickState.category = { code, name };
         document.querySelectorAll('.category-select-card').forEach(c => c.classList.remove('selected'));
         if (el) el.classList.add('selected');
+        // 直接选择后自动进入下一步
+        quickStep2Load();
     }
 
     function quickStep1Next() {
@@ -1928,7 +1930,7 @@
                 <div class="image-grid">
                     ${images.map(img => `
                         <div class="image-thumb" onclick="openImageViewer('${img.image_id}', '${img.oss_object_key || ''}')">
-                            <img src="${img.oss_object_key || ''}" alt="${img.image_id}" loading="lazy"
+                            <img src="/api/image/${img.image_id}" alt="${img.image_id}" loading="lazy"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                             <div class="image-placeholder" style="display:none;">
                                 <span class="ph-icon">&#128247;</span>
@@ -1972,7 +1974,7 @@
         html += `
             <div class="detail-section">
                 <div class="detail-section-title"><span class="dot" style="background:var(--danger);"></span>监督"110"关联责任</div>
-                ${supervision ? supervision.map(renderSupervisionCard).join('') : '<div class="no-supervision">此项隐患无监督工作规程关联项</div>'}
+                ${supervision && supervision.length > 0 ? supervision.map(renderSupervisionCard).join('') : '<div class="no-supervision">此项隐患无监督工作规程关联项</div>'}
                 <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5;">
                     来源：深圳市房屋建筑和市政基础设施工程施工安全监督"110"工作规程（试行）
                 </p>
@@ -2228,9 +2230,9 @@
             img.alt = imageId;
             info.textContent = imageId;
         } else {
-            img.src = '';
+            img.src = '/api/image/' + imageId;
             img.alt = imageId;
-            info.textContent = imageId + '（图片资源待配置）';
+            info.textContent = imageId;
         }
 
         viewer.classList.add('show');
