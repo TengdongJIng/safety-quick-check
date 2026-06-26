@@ -8,7 +8,7 @@
 import os
 import sqlite3
 import json
-from flask import Flask, jsonify, request, g, send_from_directory
+from flask import Flask, jsonify, request, g, send_from_directory, redirect
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -534,6 +534,28 @@ def get_catalog():
         })
 
     return jsonify({'data': output})
+
+
+@app.route('/api/image/<image_id>', methods=['GET'])
+def get_image(image_id):
+    """
+    图片重定向接口：根据 image_id 查询 OSS URL 并重定向
+    兼容旧版前端路径 /api/image/xxx
+    """
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT oss_object_key FROM image_asset WHERE image_id = ?
+    ''', (image_id,))
+    row = cursor.fetchone()
+    if row is None or not row[0]:
+        return jsonify({'error': '图片不存在'}), 404
+
+    oss_url = row[0]
+    if oss_url.startswith('http'):
+        return redirect(oss_url)
+    else:
+        return jsonify({'error': '图片URL无效'}), 404
 
 
 @app.route('/api/supervision/list', methods=['GET'])
