@@ -1,0 +1,3 @@
+#!/bin/bash
+cd backend
+/var/lang/python3/bin/python3 -u app.py

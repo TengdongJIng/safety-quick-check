@@ -1,0 +1,25 @@
+{
+  "envId": "your-env-id",
+  "version": "2.0",
+  "$schema": "https://framework-1258016615.tcloudbaseapp.com/tcb-framework-schema/2.0.0.json",
+  "framework": {
+    "name": "safety-quick-check",
+    "plugins": {
+      "server": {
+        "use": "@cloudbase/framework-plugin-container",
+        "inputs": {
+          "serviceName": "safety-quick-check",
+          "servicePath": "/",
+          "containerPort": 80,
+          "cpu": 0.25,
+          "mem": 0.5,
+          "maxNum": 5,
+          "minNum": 1,
+          "policyType": "cpu",
+          "policyThreshold": 60,
+          "envParams": {}
+        }
+      }
+    }
+  }
+}
