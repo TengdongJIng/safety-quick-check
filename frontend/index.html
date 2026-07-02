@@ -296,6 +296,18 @@
             flex-shrink: 0;
         }
 
+        .category-icon.icon-DN { background: #E3F2FD; color: #1565C0; }
+        .category-icon.icon-FZ { background: #F3E5F5; color: #6A1B9A; }
+        .category-icon.icon-JSJ { background: #E8F5E9; color: #2E7D32; }
+        .category-icon.icon-JK { background: #FFF3E0; color: #E65100; }
+        .category-icon.icon-HNT { background: #FBE9E7; color: #BF360C; }
+        .category-icon.icon-GD { background: #E0F7FA; color: #006064; }
+        .category-icon.icon-GJ { background: #FCE4EC; color: #AD1457; }
+        .category-icon.icon-QZ { background: #E8EAF6; color: #283593; }
+        .category-icon.icon-SJ { background: #E0F2F1; color: #00695C; }
+        .category-icon.icon-ZPS { background: #FFF8E1; color: #F57F17; }
+        .category-icon.icon-NS { background: #F5F5F5; color: #424242; }
+
         .category-info {
             flex: 1;
             min-width: 0;
@@ -1615,7 +1627,7 @@
             const listEl = document.getElementById('homeCategoryList');
             listEl.innerHTML = data.data.map(cat => `
                 <div class="category-item" onclick="selectCategory('${cat.category_code}', '${cat.category_name}')">
-                    <div class="category-icon">${getCategoryIcon(cat.category_code)}</div>
+                    <div class="category-icon icon-${cat.category_code}">${getCategoryIcon(cat.category_code)}</div>
                     <div class="category-info">
                         <div class="category-name">
                             ${cat.category_name}
@@ -1636,8 +1648,17 @@
 
     function getCategoryIcon(code) {
         const icons = {
-            'DN': '\u{1F6D7}',
-            'NS': '\u{1F6D7}',
+            'DN': '\u{1F9F7}',
+            'FZ': '\u{26CF}',
+            'JSJ': '\u{1FA9C}',
+            'JK': '\u{26CF}',
+            'HNT': '\u{1F3C7}',
+            'GD': '\u{1F687}',
+            'GJ': '\u{1F3D7}',
+            'QZ': '\u{26F5}',
+            'SJ': '\u{1F6E1}',
+            'ZPS': '\u{1F3D8}',
+            'NS': '\u{1F4D6}',
         };
         return icons[code] || '\u{1F3D7}';
     }
