@@ -150,16 +150,28 @@ def health():
 def get_categories():
     """
     获取所有工程类别列表
-    返回: [{code, name, count}, ...]
+    返回: [{category_code, category_name, source_type, count}, ...]
+    排序: 省图集(provincial)在前，区手册(district)在后
     """
     db = get_db()
     cursor = db.cursor()
     cursor.execute('''
-        SELECT category_code, category_name, COUNT(*) as count
+        SELECT 
+            category_code, 
+            category_name, 
+            source_type,
+            source,
+            COUNT(*) as count
         FROM hazard_item
         WHERE status = 'active'
-        GROUP BY category_code, category_name
-        ORDER BY category_code
+        GROUP BY category_code, category_name, source_type, source
+        ORDER BY 
+            CASE source_type 
+                WHEN 'provincial' THEN 0 
+                WHEN 'district' THEN 1 
+                ELSE 2 
+            END,
+            category_code
     ''')
     rows = dict_rows(cursor)
     return jsonify({'data': rows})
