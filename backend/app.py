@@ -160,11 +160,10 @@ def get_categories():
             category_code, 
             category_name, 
             source_type,
-            source,
             COUNT(*) as count
         FROM hazard_item
         WHERE status = 'active'
-        GROUP BY category_code, category_name, source_type, source
+        GROUP BY category_code, category_name, source_type
         ORDER BY 
             CASE source_type 
                 WHEN 'provincial' THEN 0 
