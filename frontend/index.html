@@ -17,8 +17,8 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="隐患快查助手 - 施工安全员随身口袋工具">
     <meta property="og:description" content="12大类663条常见隐患，3秒定位标准与整改要求，监督110关联责任一键查。施工安全员的随身口袋工具书。">
-    <meta property="og:image" content="https://safety-quick-check-production.up.railway.app/share-card.png">
-    <meta property="og:url" content="https://safety-quick-check-production.up.railway.app/">
+    <meta property="og:image" content="https://gd-yinhuan-277270-9-1449695391.sh.run.tcloudbase.com/share-card.png">
+    <meta property="og:url" content="https://gd-yinhuan-277270-9-1449695391.sh.run.tcloudbase.com/">
     <meta property="og:site_name" content="隐患快查助手">
     <meta property="og:locale" content="zh_CN">
 
@@ -26,12 +26,12 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="隐患快查助手 - 施工安全员随身口袋工具">
     <meta name="twitter:description" content="12大类663条常见隐患，3秒定位标准与整改要求，监督110关联责任一键查。">
-    <meta name="twitter:image" content="https://safety-quick-check-production.up.railway.app/share-card.png">
+    <meta name="twitter:image" content="https://gd-yinhuan-277270-9-1449695391.sh.run.tcloudbase.com/share-card.png">
 
     <!-- QQ / 其他平台 -->
     <meta itemprop="name" content="隐患快查助手">
     <meta itemprop="description" content="施工安全隐患快查助手，安全员随身口袋工具书。">
-    <meta itemprop="image" content="https://safety-quick-check-production.up.railway.app/share-card.png">
+    <meta itemprop="image" content="https://gd-yinhuan-277270-9-1449695391.sh.run.tcloudbase.com/share-card.png">
     <style>
         /* ============================================================
            CSS 变量 & 全局重置
@@ -1619,13 +1619,13 @@
                     <div class="category-info">
                         <div class="category-name">
                             ${cat.category_name}
-                            <span class="tag ${cat.category_code === 'DN' ? 'tag-provincial' : 'tag-district'}">
-                                ${cat.category_code === 'DN' ? '省图集' : '区手册'}
+                            <span class="tag ${cat.source_type === 'provincial' ? 'tag-provincial' : 'tag-district'}">
+                                ${cat.source_type === 'provincial' ? '省图集' : '区手册'}
                             </span>
                         </div>
                         <div class="category-meta">${cat.count} 条隐患</div>
                     </div>
-                    <div class="category-arrow">&#203A;</div>
+                    <div class="category-arrow">›</div>
                 </div>
             `).join('');
         } catch (e) {
@@ -1995,7 +1995,7 @@
                             <div class="similar-item" onclick="showDetail('${s.id}')">
                                 <span class="similar-id">${s.id}</span>
                                 <span class="similar-problem">${s.hazard_problem}</span>
-                                <span class="similar-arrow">&#203A;</span>
+                                <span class="similar-arrow">›</span>
                             </div>
                         `).join('')}
                     </div>
