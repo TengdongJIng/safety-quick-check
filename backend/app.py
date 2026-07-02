@@ -14,8 +14,15 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# 数据库路径（相对本文件的上级目录）
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database', 'hazard.db')
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+DB_PATH = os.path.join(BASE_DIR, 'database', 'hazard.db')
+FRONTEND_DIR = os.path.join(BASE_DIR, 'frontend')
+
+print(f"[STARTUP] BASE_DIR: {BASE_DIR}")
+print(f"[STARTUP] DB_PATH: {DB_PATH}")
+print(f"[STARTUP] FRONTEND_DIR: {FRONTEND_DIR}")
+print(f"[STARTUP] FRONTEND_DIR exists: {os.path.isdir(FRONTEND_DIR)}")
+print(f"[STARTUP] index.html exists: {os.path.isfile(os.path.join(FRONTEND_DIR, 'index.html'))}")
 
 
 def get_db():
@@ -583,18 +590,33 @@ def get_supervision_list():
 # ============================================================
 # 静态文件服务（H5前端）
 # ============================================================
+# 健康检查
+# ============================================================
+
+@app.route('/health')
+def health_check():
+    """健康检查端点，Railway 使用此端点判断服务是否正常"""
+    return jsonify({'status': 'ok', 'service': 'safety-quick-check'}), 200
+
+
+# ============================================================
+# 前端静态文件服务
+# ============================================================
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
-
 
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
 def serve_frontend(path):
     """提供前端静态文件，未匹配路径返回 index.html（SPA 路由）"""
-    file_path = os.path.join(FRONTEND_DIR, path)
-    if os.path.isfile(file_path):
-        return send_from_directory(FRONTEND_DIR, path)
-    return send_from_directory(FRONTEND_DIR, 'index.html')
+    try:
+        file_path = os.path.join(FRONTEND_DIR, path)
+        if os.path.isfile(file_path):
+            return send_from_directory(FRONTEND_DIR, path)
+        return send_from_directory(FRONTEND_DIR, 'index.html')
+    except Exception as e:
+        app.logger.error(f"静态文件服务错误: {e}")
+        return jsonify({'error': '静态文件服务错误'}), 500
 
 
 # ============================================================
@@ -602,8 +624,9 @@ def serve_frontend(path):
 # ============================================================
 
 if __name__ == '__main__':
-    # 从环境变量读取端口，支持 Railway 等部署平台
-    port = int(os.environ.get('PORT', 5000))
-    print(f"[INFO] 数据库路径: {DB_PATH}")
+    port = int(os.environ.get('PORT', 9000))
+    print(f"[INFO] BASE_DIR: {BASE_DIR}")
+    print(f"[INFO] DB_PATH: {DB_PATH}")
+    print(f"[INFO] FRONTEND_DIR: {FRONTEND_DIR}")
     print(f"[INFO] 服务启动: http://0.0.0.0:{port}")
     app.run(host='0.0.0.0', port=port, debug=False)
