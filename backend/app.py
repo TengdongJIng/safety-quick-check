@@ -616,6 +616,12 @@ def health_check():
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
+@app.route('/9efb8b641383ff28fd027487b164731d.txt')
+def wechat_verify():
+    """微信域名验证文件"""
+    return 'e618997534d43134a232e0f7789ce0ecdb0fb64a', 200, {'Content-Type': 'text/plain'}
+
+
 @app.route('/', defaults={'path': 'index.html'})
 @app.route('/<path:path>')
 def serve_frontend(path):
