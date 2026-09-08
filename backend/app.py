@@ -599,7 +599,108 @@ def get_supervision_list():
 
 
 # ============================================================
-# 静态文件服务（H5前端）
+# 事故案例视频接口
+# ============================================================
+
+@app.route('/api/videos', methods=['GET'])
+def get_videos():
+    """
+    获取事故案例视频列表
+    参数:
+      category: 类别代码（如 DN, FZ, NS）
+      inspection_item: 检查项名称（用于精确匹配）
+    返回: [{bv_id, title, source, url, description, duration, category_code, inspection_item}, ...]
+    匹配优先级:
+      1. category_code + inspection_item 精确匹配
+      2. category_code + '*' (类别通用视频)
+      3. '*' + '*' (全局通用视频)
+    """
+    category = request.args.get('category', '').strip()
+    inspection_item = request.args.get('inspection_item', '').strip()
+
+    db = get_db()
+    cursor = db.cursor()
+    results = []
+    seen_bv = set()
+
+    # 优先级1：精确匹配 category + inspection_item
+    if category and inspection_item:
+        cursor.execute('''
+            SELECT bv_id, title, source, url, category_code, inspection_item,
+                   description, duration
+            FROM video_asset
+            WHERE status = 'active'
+              AND category_code = ? AND inspection_item = ?
+            ORDER BY id
+        ''', (category, inspection_item))
+        for row in dict_rows(cursor):
+            if row['bv_id'] not in seen_bv:
+                results.append(row)
+                seen_bv.add(row['bv_id'])
+
+    # 优先级2：类别通用视频 (category_code + '*')
+    if category:
+        cursor.execute('''
+            SELECT bv_id, title, source, url, category_code, inspection_item,
+                   description, duration
+            FROM video_asset
+            WHERE status = 'active'
+              AND category_code = ? AND inspection_item = '*'
+            ORDER BY id
+        ''', (category,))
+        for row in dict_rows(cursor):
+            if row['bv_id'] not in seen_bv:
+                results.append(row)
+                seen_bv.add(row['bv_id'])
+
+    # 优先级3：NS类别按 inspection_item 精确匹配
+    if category == 'NS' and inspection_item:
+        cursor.execute('''
+            SELECT bv_id, title, source, url, category_code, inspection_item,
+                   description, duration
+            FROM video_asset
+            WHERE status = 'active'
+              AND category_code = 'NS' AND inspection_item = ?
+            ORDER BY id
+        ''', (inspection_item,))
+        for row in dict_rows(cursor):
+            if row['bv_id'] not in seen_bv:
+                results.append(row)
+                seen_bv.add(row['bv_id'])
+
+    # 优先级4：全局通用视频 ('*' + '*')
+    cursor.execute('''
+        SELECT bv_id, title, source, url, category_code, inspection_item,
+               description, duration
+        FROM video_asset
+        WHERE status = 'active'
+          AND category_code = '*' AND inspection_item = '*'
+        ORDER BY id
+    ''')
+    for row in dict_rows(cursor):
+        if row['bv_id'] not in seen_bv:
+            results.append(row)
+            seen_bv.add(row['bv_id'])
+
+    return jsonify({'data': results, 'count': len(results)})
+
+
+@app.route('/api/videos/all', methods=['GET'])
+def get_all_videos():
+    """获取所有视频列表（用于全局目录页展示）"""
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('''
+        SELECT DISTINCT bv_id, title, source, url, category_code, inspection_item,
+               description, duration
+        FROM video_asset
+        WHERE status = 'active'
+        ORDER BY category_code, inspection_item
+    ''')
+    rows = dict_rows(cursor)
+    return jsonify({'data': rows, 'count': len(rows)})
+
+
 # ============================================================
 # 健康检查
 # ============================================================
